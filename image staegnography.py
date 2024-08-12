@@ -1,74 +1,76 @@
-# import the liabraries
 import cv2
 import os
-import hashlib
 
-# Specify the path to the input image
-image_path = r"C:\Users\adida\OneDrive\Desktop\New folder (2)\car.jpeg"
-
-# Read the input image wr have to set the variable 
-img = cv2.imread(image_path)
-
-# Check if the image is successfully loaded
-if img is None:
-    print("Image not found. Check the file path and make sure the image exists.")
-    exit()
-
-# Get the dimensions of the image
-height, width, channels = img.shape
-
-# Prompt the user to input the secret message
-msg = input("Enter secret message: ")
-
-# Prompt the user to input the password
-password = input("Enter a passcode: ")
-
-# Hash the password using SHA-256
-hash_object = hashlib.sha256(password.encode())
-hashed_password = hash_object.digest()
-
-# Initialize dictionaries for mapping characters to their ASCII values and vice versa
+# Dictionaries to store character to integer and integer to character mappings
 d = {}
 c = {}
 
-# Fill the dictionaries with ASCII values (0-255)
-for i in range(256):
-    d[chr(i)] = i  # Character to ASCII
-    c[i] = chr(i)  # ASCII to character
+# Populate the dictionaries
+for i in range(255):
+    d[chr(i)] = i
+    c[i] = chr(i)
 
-# Initialize variables for image coordinates and color channel
-n = 0  # Row index
-m = 0  # Column index
-z = 0  # Color channel index
+# Load the image
+x = cv2.imread(r"C:\Users\lavur\Downloads\bike.webp")
 
-# Encode the secret message into the image using the hashed password
-for i in range(len(msg)):
-    # Ensure the calculation stays within the 0-255 range
-    new_value = (int(img[n, m, z]) + d[msg[i]] + hashed_password[i % len(hashed_password)]) % 256
-    img[n, m, z] = new_value
-    
-    # Move to the next pixel
+# Get the dimensions of the image
+i = x.shape[0]
+j = x.shape[1]
+print("Image dimensions:", i, j)
+
+# Get user inputs for the security key and the text to hide
+key = input("Enter key to edit (Security Key): ")
+text = input("Enter text to hide: ")
+
+# Initialize variables
+k1 = 0
+tln = len(text)
+z = 0  # decides plane
+m = 0  # number of row
+n = 0  # number of column
+
+# Length of the text
+l = len(text)
+
+# Encode the text into the image
+for i in range(l):
+    x[n, m, z] = d[text[i]] ^ d[key[k1]]
+    n += 1
     m += 1
-    
-    # If the column index exceeds the image width, reset it and move to the next row
-    if m >= width:
+    m = m % x.shape[1]  # Wrap around if m exceeds image width
+    z = (z + 1) % 3  # Cycles through 0, 1, 2 for the RGB planes
+    k1 = (k1 + 1) % len(key)  # Cycles through the key
+
+# Save the encrypted image
+cv2.imwrite(r"C:\Users\lavur\Downloads\bike.webp", x)
+os.startfile(r"C:\Users\lavur\Downloads\bike.webp")
+print("Data Hiding in Image completed successfully.")
+
+# Option to extract data from the image
+ch = int(input("\nEnter 1 to extract data from Image: "))
+
+if ch == 1:
+    key1 = input("\n\nRe-enter key to extract text: ")
+    decrypt = ""
+
+    if key == key1:
+        # Reset variables for decryption
+        k1 = 0
+        z = 0
         m = 0
-        n += 1
-    
-    # If the row index exceeds the image height, stop encoding (message too large for image)
-    if n >= height:
-        print("Image too small to hold the entire message.")
-        break
-    
-    # Cycle through the color channels (0, 1, 2) for RGB
-    z = (z + 1) % 3
-
-# Save the modified image to a new file
-encrypted_image_path = os.path.join(os.path.dirname(image_path), "encryptedImage.jpg")
-cv2.imwrite(encrypted_image_path, img)
-
-# Open the newly saved encrypted image
-os.startfile(encrypted_image_path)
-
-print(f"Message has been encoded into '{encrypted_image_path}'.")
-
+        n = 0
+        
+        for i in range(l):
+            decrypted_char = c[x[n, m, z] ^ d[key[k1]]]  # Reverse the XOR operation
+            decrypt += decrypted_char
+            n += 1
+            m += 1
+            m = m % x.shape[1]
+            z = (z + 1) % 3
+            k1 = (k1 + 1) % len(key)
+        
+        print("Extracted text:", decrypt)
+    else:
+        print("Incorrect key! Decryption failed.")
+else:
+    print("Thank you. EXITING.")
