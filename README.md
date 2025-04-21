@@ -1,1 +1,0 @@
-Steganography is the practice of hiding a message, file, or image within another message, file, or image to conceal its existence. Unlike cryptography, which obscures the content of a message, steganography hides the fact that a message even exists.
